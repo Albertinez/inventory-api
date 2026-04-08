@@ -1,74 +1,52 @@
 import requests
 
-
-BASE_URL = "http://127.0.0.1:5000"
-
-
-def menu():
-    print("\n1. View Inventory")
-    print("2. Add Item")
-    print("3. Update Item")
-    print("4. Delete Item")
-    print("5. Fetch from API")
-    print("6. Exit")
-
-
-def view_inventory():
-    res = requests.get(f"{BASE_URL}/inventory")
-    print(res.json())
-
-
-def add_item():
-    name = input("Name: ")
-    price = float(input("Price: "))
-    stock = int(input("Stock: "))
-
-    data = {
-        "product_name": name,
-        "price": price,
-        "stock": stock
-    }
-
-    res = requests.post(f"{BASE_URL}/inventory", json=data)
-    print(res.json())
-
-
-def update_item():
-    item_id = input("ID: ")
-    price = input("New price: ")
-
-    res = requests.patch(
-        f"{BASE_URL}/inventory/{item_id}",
-        json={"price": float(price)}
-    )
-    print(res.json())
-
-
-def delete_item():
-    item_id = input("ID: ")
-    res = requests.delete(f"{BASE_URL}/inventory/{item_id}")
-    print(res.json())
-
-
-def fetch_api():
-    barcode = input("Enter barcode: ")
-    res = requests.get(f"{BASE_URL}/fetch-product/{barcode}")
-    print(res.json())
-
+base_url = "http://127.0.0.1:5000"
 
 while True:
-    menu()
-    choice = input("Choose: ")
+    print("\nMENU")
+    print("1. view items")
+    print("2. add item")
+    print("3. update price")
+    print("4. delete item")
+    print("5. check product")
+    print("6. exit")
+
+    choice = input("enter option: ")
 
     if choice == "1":
-        view_inventory()
+        r = requests.get(f"{base_url}/inventory")
+        print(r.json())
+
     elif choice == "2":
-        add_item()
+        name = input("name: ")
+        price = int(input("price: "))
+        stock = int(input("stock: "))
+
+        r = requests.post(f"{base_url}/inventory", json={
+            "name": name,
+            "price": price,
+            "stock": stock
+        })
+        print(r.json())
+
     elif choice == "3":
-        update_item()
+        item_id = input("id: ")
+        new_price = int(input("new price: "))
+
+        r = requests.patch(f"{base_url}/inventory/{item_id}", json={
+            "price": new_price
+        })
+        print(r.json())
+
     elif choice == "4":
-        delete_item()
+        item_id = input("id: ")
+        r = requests.delete(f"{base_url}/inventory/{item_id}")
+        print(r.json())
+
     elif choice == "5":
-        fetch_api()
+        code = input("barcode: ")
+        r = requests.get(f"{base_url}/food/{code}")
+        print(r.json())
+
     elif choice == "6":
         break

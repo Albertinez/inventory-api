@@ -1,9 +1,10 @@
-inventory = [
+# simple storage (just using a list for now)
+
+store_items = [
     {
         "id": 1,
-        "product_name": "Organic Almond Milk",
-        "brands": "Silk",
-        "price": 5.99,
-        "stock": 10
+        "name": "Bread",
+        "price": 60,
+        "stock": 15
     }
 ]

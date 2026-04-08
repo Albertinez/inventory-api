@@ -1,22 +1,24 @@
 import requests
 
-BASE_URL = "https://world.openfoodfacts.org/api/v0/product/"
+# get product from openfoodfacts using barcode
 
 
-def get_product_by_barcode(barcode):
-    response = requests.get(f"{BASE_URL}{barcode}.json")
+def find_food(barcode):
+    url = f"https://world.openfoodfacts.org/api/v0/product/{barcode}.json"
 
-    if response.status_code != 200:
+    try:
+        res = requests.get(url)
+        data = res.json()
+
+        if data["status"] == 1:
+            prod = data["product"]
+
+            return {
+                "name": prod.get("product_name"),
+                "brand": prod.get("brands")
+            }
+
         return None
 
-    data = response.json()
-
-    if data["status"] == 1:
-        product = data["product"]
-        return {
-            "product_name": product.get("product_name"),
-            "brands": product.get("brands"),
-            "ingredients": product.get("ingredients_text")
-        }
-
-    return None
+    except Exception:
+        return None
