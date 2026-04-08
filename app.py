@@ -1,94 +1,97 @@
-from flask import Flask, jsonify, request
-from inventory import inventory
-from services.openfoodfacts import get_product_by_barcode
+from flask import Flask, request, jsonify
+from inventory import store_items
+from services.openfoodfacts import find_food
 
 app = Flask(__name__)
 
 
-# GET all items
+# show all items
 @app.route("/inventory", methods=["GET"])
-def get_inventory():
-    return jsonify(inventory)
+def get_items():
+    return jsonify(store_items)
 
 
-# GET single item
+# get one item
 @app.route("/inventory/<int:item_id>", methods=["GET"])
 def get_item(item_id):
-    for item in inventory:
+    for item in store_items:
         if item["id"] == item_id:
             return jsonify(item)
-    return {"error": "Item not found"}, 404
+
+    return {"message": "item missing"}, 404
 
 
-# POST add item
+# add new item
 @app.route("/inventory", methods=["POST"])
-def add_item():
+def create_item():
     data = request.json
 
     new_item = {
-        "id": len(inventory) + 1,
-        "product_name": data["product_name"],
-        "brands": data.get("brands"),
-        "price": data["price"],
-        "stock": data["stock"]
+        "id": len(store_items) + 1,
+        "name": data.get("name"),
+        "price": data.get("price"),
+        "stock": data.get("stock")
     }
 
-    inventory.append(new_item)
+    store_items.append(new_item)
     return jsonify(new_item), 201
 
 
-# PATCH update item
+# update item
 @app.route("/inventory/<int:item_id>", methods=["PATCH"])
 def update_item(item_id):
     data = request.json
 
-    for item in inventory:
+    for item in store_items:
         if item["id"] == item_id:
-            item.update(data)
+            if "price" in data:
+                item["price"] = data["price"]
+            if "stock" in data:
+                item["stock"] = data["stock"]
+
             return jsonify(item)
 
-    return {"error": "Item not found"}, 404
+    return {"message": "item not found"}, 404
 
 
-# DELETE item
+# delete item
 @app.route("/inventory/<int:item_id>", methods=["DELETE"])
 def delete_item(item_id):
-    for item in inventory:
+    for item in store_items:
         if item["id"] == item_id:
-            inventory.remove(item)
-            return {"message": "Item deleted"}
+            store_items.remove(item)
+            return {"message": "deleted"}
 
-    return {"error": "Item not found"}, 404
-
-
-# 🌐 External API fetch (OpenFoodFacts only)
-@app.route("/fetch-product/<barcode>", methods=["GET"])
-def fetch_product(barcode):
-    product = get_product_by_barcode(barcode)
-
-    if product:
-        return jsonify(product)
-
-    return {"error": "Product not found"}, 404
+    return {"message": "nothing there"}, 404
 
 
-# 🔥 NEW: External API → Add to inventory
-@app.route("/add-from-api/<barcode>", methods=["POST"])
-def add_from_api(barcode):
-    product = get_product_by_barcode(barcode)
+# check product from API
+@app.route("/food/<barcode>", methods=["GET"])
+def get_food_api(barcode):
+    result = find_food(barcode)
 
-    if not product:
-        return {"error": "Product not found in external API"}, 404
+    if result:
+        return jsonify(result)
+
+    return {"message": "not found in api"}, 404
+
+
+# fetch + save product
+@app.route("/food/<barcode>", methods=["POST"])
+def save_food_api(barcode):
+    result = find_food(barcode)
+
+    if not result:
+        return {"message": "api failed"}, 404
 
     new_item = {
-        "id": len(inventory) + 1,
-        "product_name": product.get("product_name"),
-        "brands": product.get("brands"),
+        "id": len(store_items) + 1,
+        "name": result["name"],
         "price": 0,
         "stock": 0
     }
 
-    inventory.append(new_item)
+    store_items.append(new_item)
     return jsonify(new_item), 201
 
 
